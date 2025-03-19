@@ -1,0 +1,33 @@
+export type CustomerServiceData = {
+    id: number;
+    closing_date: string;
+    aditional_applications: number;
+    adviser_tickets: number;
+    ll_inconsequential: number;
+    ll_no_solution_problems: number;
+    ll_confirmation: number;
+    ll_problems: number;
+    ll_repairs: number;
+    ll_mold_and_shrinkwrap_schedule: number;
+    ll_triway_call: number;
+    ll_claim_number_call: number;
+    ll_satisfaction_survey: number;
+    ll_marketing_survey: number;
+    ll_welcome_call: number;
+    total_calls: number;
+    emails_sent: number;
+    emails_managed: number;
+    work_orders: number;
+    google_review_applications: number;
+    google_reviews: number;
+    BBB_review_applications: number;
+    BBB_reviews: number;
+    repairs_of_the_day: number;
+    inspections_of_the_day: number;
+    remediations_of_the_day: number;
+    shrinkwrap_of_the_day: number;
+    ll_clean_initiative: number;
+    ci_to_wdm: number;
+    wdm_to_ci: number;
+    observations: string;
+}
