@@ -1,25 +1,24 @@
-import { Box, Grid, IconButton } from "@mui/material"
+import Grid from "@mui/material/Grid2"
 import { Form, Formik, FormikState, FormikValues } from "formik";
-import { baseUrl } from "../../../common"
 import { useContext, useState } from "react"
-import { AuthContext } from "../../../context/auth"
-import { ButtonCustom, TextFieldCustom, TypographyCustom } from "../../../components/custom"
-import { Layout } from "../../../components/ui"
-import { DescripcionDeVista, ModalSelector } from "../../../components/ui/content"
+import { ButtonCustom, TypographyCustom } from "../../../components/custom"
 import { OptionsList } from "../../../components/ui/options"
 import { SalesData, Option, IAdviser, ITeam } from "../../../interfaces"
 import BarChartRounded from "@mui/icons-material/BarChartRounded";
 import PieChartRounded from "@mui/icons-material/PieChartRounded";
-import { NumericFormat } from "react-number-format"
 import { CalendarCustom } from "../../../components/custom/CalendarCustom"
 import moment from "moment"
-const { default: Swal } = await import('sweetalert2');
-import { errorArrayLaravelTransformToString } from "../../../helpers/functions"
-import { useNavigate } from "react-router-dom"
+import { useNavigate } from "react-router"
 import { SalesStatsTable } from "../../../components/stats/sales"
-import { PageLoading } from "../../../components/ui/content/PageLoading"
-import { useGetGraphs } from "../../../hooks"
-import AddRounded from "@mui/icons-material/AddRounded";
+import { useGetGraphs } from "../../../hooks/useGetGraphs";
+import { IResponse } from "../../../interfaces/response-type";
+import { request } from "../../../common/request";
+import { toast } from "react-toastify";
+import { errorArrayLaravelTransformToString } from "../../../lib/functions";
+import { Loading } from "../../../components/ui/content/Loading";
+import { Layout } from "../../../components/ui/Layout";
+import { DescripcionDeVista } from "../../../components/ui/content/DescripcionDeVista";
+import { ModalSelector } from "../../../components/ui/content/ModalSelector";
 import AccordionRoofAndWater from "../../../components/ui/content/Accordion";
 
 type InitialValues = Omit<SalesData, 'id' | 'created_at' | 'updated_at' | 'team' | 'adviser' | 'team_id' | 'adviser_id'>
@@ -45,12 +44,9 @@ export const SalesRegisterStats = () => {
         { text: 'Menu estadisticas', icon: <PieChartRounded />, path: '/stats' },
         { text: 'Estadisticas Sales', icon: <BarChartRounded />, path: '/stats/sales' },
     ]
-    const { authState } = useContext(AuthContext);
-
-    const router = useNavigate();
 
     const onSubmit = async (values: FormikValues, resetForm: (nextState?: Partial<FormikState<InitialValues>> | undefined) => void) => {
-        const url = `${baseUrl}/stats/sales`;
+        const url = `/stats/sales`;
         const body = new URLSearchParams();
         console.log({ values })
         for (const [key, value] of Object.entries(values)) {
@@ -61,76 +57,31 @@ export const SalesRegisterStats = () => {
         body.append('claims', String((Number(values.roof) + Number(values.water)).toFixed(2)));
         body.append('team', String(teamSelected?.id));
         body.append('adviser', String(adviserSelected?.id));
-        const options = {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Authorization': `Bearer ${authState.token}`
-            },
-            body
-        }
 
-        try {
-            const response = await fetch(url, options);
-            switch (response.status) {
-                case 200:
-                    const { message } = await response.json();
-                    Swal.fire({
-                        title: 'Exito',
-                        text: message,
-                        icon: 'success',
-                        timer: 2000,
-                        timerProgressBar: true,
-                        showConfirmButton: false,
-                    });
-                    resetForm();
-                    setAdviserSelected(null)
-                    getData();
-                    break;
-                case 400:
-                    const { errors } = await response.json();
-                    console.error({ errors })
-                    Swal.fire({
-                        title: 'Error',
-                        html: errorArrayLaravelTransformToString(errors),
-                        icon: 'error',
-                    });
-                    break;
-                case 404:
-                    Swal.fire({
-                        title: 'Error',
-                        text: 'No se encontro la direccion del servidor',
-                        icon: 'error',
-                        timer: 2000,
-                        timerProgressBar: true,
-                        showConfirmButton: false,
-                    });
-                    break;
-                default:
-                    Swal.fire({
-                        title: 'Error',
-                        text: 'Ocurrio un error inesperado',
-                        icon: 'error',
-                        timer: 2000,
-                        timerProgressBar: true,
-                        showConfirmButton: false,
-                    });
-                    break;
-            }
-        } catch (error) {
-            console.log({ error })
-            Swal.fire({
-                title: 'Error',
-                text: 'No se logro conectar con el servidor',
-                icon: 'error',
-                timer: 2000,
-                timerProgressBar: true,
-                showConfirmButton: false,
-            });
+        const { status, response, err }: IResponse = await request(url, 'POST', body);
+        switch (response.status) {
+            case 200:
+                const { message } = await response.json();
+                toast.success(message);
+                resetForm();
+                setAdviserSelected(null)
+                getData();
+                break;
+            case 400:
+                const { errors } = await response.json();
+                console.error({ errors })
+                toast.error(errorArrayLaravelTransformToString(errors))
+                break;
+            case 404:
+                toast.error('No se encontro la direccion del servidor')
+                break;
+            default:
+                toast.error('Ocurrio un error inesperado')
+                break;
         }
     }
     // Loader
-    if (loading) return (<PageLoading />);
+    if (loading) return (<Loading />);
     return (
 
         <Layout>
@@ -146,7 +97,7 @@ export const SalesRegisterStats = () => {
                 {({ values, handleChange, handleSubmit }) => (
                     <Form onSubmit={handleSubmit} id='form'>
                         <Grid container spacing={2} sx={{ mb: 5, p: 1 }}>
-                            <Grid item xs={12} sm={6}>
+                            <Grid size={{ xs: 12, sm: 6 }}>
                                 <CalendarCustom
                                     setValue={setDate}
                                     rest={{
@@ -157,13 +108,13 @@ export const SalesRegisterStats = () => {
                                     }}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={3}>
-                                <ModalSelector title={"Seleccionar asesor"} text={"Buscar asesor"} data={adviserSelected} setData={setAdviserSelected} url={`${baseUrl}/adviser`} dataProperty={"names"} dataPropertySecondary={"document"} dataPropertyAux={"surnames"} />
+                            <Grid size={{ xs: 12, sm: 3 }}>
+                                <ModalSelector title={"Seleccionar asesor"} text={"Buscar asesor"} data={adviserSelected} setData={setAdviserSelected} url={`/adviser`} dataProperty={"names"} dataPropertySecondary={"document"} dataPropertyAux={"surnames"} />
                             </Grid>
-                            <Grid item xs={12} sm={3}>
-                                <ModalSelector team title={"Seleccionar equipo"} text={"Buscar equipo"} data={teamSelected} setData={setTeamSelected} url={`${baseUrl}/team`} dataProperty={"description"} dataPropertySecondary={"names"} dataPropertyAux={"surnames"} />
+                            <Grid size={{ xs: 12, sm: 3 }}>
+                                <ModalSelector team title={"Seleccionar equipo"} text={"Buscar equipo"} data={teamSelected} setData={setTeamSelected} url={`/team`} dataProperty={"description"} dataPropertySecondary={"names"} dataPropertyAux={"surnames"} />
                             </Grid>
-                            <Grid item xs={12} sx={{ display: 'flex', flexFlow: 'row nowrap', alignItems: 'center' }}>
+                            <Grid size={12} sx={{ display: 'flex', flexFlow: 'row nowrap', alignItems: 'center' }}>
                                 <TypographyCustom sx={{ mr: 1 }}>Sem</TypographyCustom>
                                 <CalendarCustom
                                     setValue={setWeekFrom}
@@ -186,7 +137,7 @@ export const SalesRegisterStats = () => {
                                     }}
                                 />
                             </Grid>
-                            <Grid item xs={12}>
+                            <Grid size={12}>
                                 <AccordionRoofAndWater />
                             </Grid>
                             {/* <Grid item xs={12} sm={4}>
@@ -240,7 +191,7 @@ export const SalesRegisterStats = () => {
                             {/* <Grid item xs={12}>
                                 <TextFieldCustom label="Observaciones" multiline name="observations" value={values.observations} onChange={handleChange} />
                             </Grid> */}
-                            <Grid item xs={12}>
+                            <Grid size={12}>
                                 <ButtonCustom type="submit" form="form">Registrar estadisticas</ButtonCustom>
                             </Grid>
                         </Grid>

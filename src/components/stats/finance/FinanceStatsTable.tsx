@@ -1,9 +1,10 @@
 import { Dispatch, FC, SetStateAction, useContext } from "react"
-const { default: Swal } = await import('sweetalert2');
-import { AuthContext } from "../../../context/auth"
 import { TableContainer, Paper, Table, TableHead, TableRow, TableCell, TableBody, Pagination, Box } from "@mui/material";
-import { CustomerServiceData, FinanceData } from "../../../interfaces";
+import { FinanceData } from "../../../interfaces";
 import { TableData } from ".";
+import { toast } from "react-toastify";
+import { IResponse } from "../../../interfaces/response-type";
+import { request } from "../../../common/request";
 
 interface Props {
     data: any;
@@ -11,68 +12,25 @@ interface Props {
 }
 export const FinanceStatsTable: FC<Props> = ({ data, setData }) => {
 
-    const { authState } = useContext(AuthContext);
 
     const changePage = async (event: React.ChangeEvent<unknown>, page: number) => {
-        const url = `${data?.path}?page=${page}`
-        const options = {
-            method: "GET",
-            headers: {
-                'Accept': 'application/json',
-                'Authorization': `Bearer ${authState.token}`
-            }
+        const url = `/${data?.path}?page=${page}`
+        const { status, response, err }: IResponse = await request(url, 'GET');
+        switch (status) {
+            case 200:
+                const { data } = await response.json();
+                setData(data)
+                break;
+            case 400:
+                toast.error('Ocurrio un error al conectar con el servidor')
+                break;
+            case 500:
+                toast.error('Ocurrio un error al conectar con el servidor')
+                break;
+            default:
+                toast.error('Ocurrio un error al conectar con el servidor')
+                break;
         }
-        try {
-            const response = await fetch(url, options);
-            switch (response.status) {
-                case 200:
-                    const { data } = await response.json();
-                    setData(data)
-                    break;
-                case 400:
-                    Swal.fire({
-                        title: 'Error',
-                        text: 'Ocurrio un error al conectar con el servidor',
-                        icon: 'error',
-                        timer: 2000,
-                        showConfirmButton: false,
-                        timerProgressBar: true,
-                    })
-                    break;
-                case 500:
-                    Swal.fire({
-                        title: 'Error',
-                        text: 'Ocurrio un error al conectar con el servidor',
-                        icon: 'error',
-                        timer: 2000,
-                        showConfirmButton: false,
-                        timerProgressBar: true,
-                    })
-                    break;
-                default:
-                    Swal.fire({
-                        title: 'Error',
-                        text: 'Ocurrio un error al conectar con el servidor',
-                        icon: 'error',
-                        timer: 2000,
-                        showConfirmButton: false,
-                        timerProgressBar: true,
-                    })
-                    break;
-
-            }
-        } catch (error) {
-            console.log({ error });
-            Swal.fire({
-                title: 'Error',
-                text: 'Ocurrio un error al conectar con el servidor',
-                icon: 'error',
-                timer: 2000,
-                showConfirmButton: false,
-                timerProgressBar: true,
-            })
-        }
-        return;
     }
     return (
         <>

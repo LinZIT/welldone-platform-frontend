@@ -1,11 +1,7 @@
-import { Grid } from "@mui/material"
+import Grid from "@mui/material/Grid2"
 import { Form, Formik, FormikValues } from "formik"
-import { baseUrl } from "../../../common"
-import { useContext, useState } from "react"
-import { AuthContext } from "../../../context/auth"
+import { useState } from "react"
 import { ButtonCustom, TextFieldCustom } from "../../../components/custom"
-import { Layout } from "../../../components/ui"
-import { DescripcionDeVista } from "../../../components/ui/content"
 import { OptionsList } from "../../../components/ui/options"
 import { ClaimsData, Option } from "../../../interfaces"
 import BarChartRounded from "@mui/icons-material/BarChartRounded";
@@ -13,9 +9,13 @@ import PieChartRounded from "@mui/icons-material/PieChartRounded";
 import { NumericFormat } from "react-number-format"
 import { CalendarCustom } from "../../../components/custom/CalendarCustom"
 import moment from "moment"
-const { default: Swal } = await import('sweetalert2');
-import { errorArrayLaravelTransformToString } from "../../../helpers/functions"
-import { useNavigate } from "react-router-dom"
+import { useNavigate } from "react-router"
+import { IResponse } from "../../../interfaces/response-type"
+import { request } from "../../../common/request"
+import { toast } from "react-toastify"
+import { errorArrayLaravelTransformToString } from "../../../lib/functions"
+import { Layout } from "../../../components/ui/Layout"
+import { DescripcionDeVista } from "../../../components/ui/content/DescripcionDeVista"
 
 type InitialValues = Omit<ClaimsData, 'id' | 'created_at' | 'updated_at'>
 
@@ -38,9 +38,8 @@ export const ClaimsRegisterStats = () => {
         { text: 'Menu estadisticas', icon: <PieChartRounded />, path: '/stats' },
         { text: 'Estadisticas Claims', icon: <BarChartRounded />, path: '/stats/claims' },
     ]
-    const { authState } = useContext(AuthContext);
     const onSubmit = async (values: FormikValues) => {
-        const url = `${baseUrl}/stats/claims`;
+        const url = `/stats/claims`;
         const body = new URLSearchParams();
         body.append('closing_date', moment(date).format('YYYY-MM-DD'));
         body.append('proceedings', String(values.proceedings));
@@ -52,73 +51,23 @@ export const ClaimsRegisterStats = () => {
         body.append('portfolio_number', String(values.portfolio_number));
         body.append('observations', String(values.observations));
 
-        const options = {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Authorization': `Bearer ${authState.token}`
-            },
-            body
-        }
-
-        try {
-            const response = await fetch(url, options);
-            switch (response.status) {
-                case 200:
-                    const { message, data } = await response.json();
-                    Swal.fire({
-                        title: 'Exito',
-                        text: message,
-                        icon: 'success',
-                        timer: 2000,
-                        timerProgressBar: true,
-                        showConfirmButton: false,
-                    });
-                    router('/stats/claims');
-                    break;
-                case 400:
-                    const { status, errors } = await response.json();
-                    console.log(status)
-                    Swal.fire({
-                        title: 'Error',
-                        html: errorArrayLaravelTransformToString(errors),
-                        icon: 'error',
-                        timer: 2000,
-                        timerProgressBar: true,
-                        showConfirmButton: false,
-                    });
-                    break;
-                case 404:
-                    Swal.fire({
-                        title: 'Error',
-                        text: 'No se encontro la direccion del servidor',
-                        icon: 'error',
-                        timer: 2000,
-                        timerProgressBar: true,
-                        showConfirmButton: false,
-                    });
-                    break;
-                default:
-                    Swal.fire({
-                        title: 'Error',
-                        text: 'Ocurrio un error inesperado',
-                        icon: 'error',
-                        timer: 2000,
-                        timerProgressBar: true,
-                        showConfirmButton: false,
-                    });
-                    break;
-            }
-        } catch (error) {
-            console.log({ error })
-            Swal.fire({
-                title: 'Error',
-                text: 'No se logro conectar con el servidor',
-                icon: 'error',
-                timer: 2000,
-                timerProgressBar: true,
-                showConfirmButton: false,
-            });
+        const { status, response, err }: IResponse = await request(url, 'POST', body);
+        switch (status) {
+            case 200:
+                const { message, data } = await response.json();
+                toast.success(message)
+                router('/stats/claims');
+                break;
+            case 400:
+                const { errors } = await response.json();
+                toast.error(errorArrayLaravelTransformToString(errors))
+                break;
+            case 404:
+                toast.error('No se encontro la direccion del servidor')
+                break;
+            default:
+                toast.error('Ocurrio un error inesperado')
+                break;
         }
     }
     return (
@@ -136,7 +85,7 @@ export const ClaimsRegisterStats = () => {
                 {({ values, handleChange, handleSubmit }) => (
                     <Form onSubmit={handleSubmit}>
                         <Grid container spacing={2}>
-                            <Grid item xs={12} sm={3}>
+                            <Grid size={{ xs: 12, sm: 3 }}>
                                 <CalendarCustom
                                     setValue={setDate}
                                     rest={{
@@ -147,7 +96,7 @@ export const ClaimsRegisterStats = () => {
                                     }}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={3}>
+                            <Grid size={{ xs: 12, sm: 3 }}>
                                 <NumericFormat
                                     label='Expedientes'
                                     name='proceedings'
@@ -162,7 +111,7 @@ export const ClaimsRegisterStats = () => {
                                     fixedDecimalScale={false}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={3}>
+                            <Grid size={{ xs: 12, sm: 3 }}>
                                 <NumericFormat
                                     label='Rechazados'
                                     name='declined'
@@ -177,7 +126,7 @@ export const ClaimsRegisterStats = () => {
                                     fixedDecimalScale={false}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={3}>
+                            <Grid size={{ xs: 12, sm: 3 }}>
                                 <NumericFormat
                                     label='Valor del expediente'
                                     name='proceeding_value'
@@ -193,7 +142,7 @@ export const ClaimsRegisterStats = () => {
                                     fixedDecimalScale={true}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={3}>
+                            <Grid size={{ xs: 12, sm: 3 }}>
                                 <NumericFormat
                                     label='Monto ajustado'
                                     name='fixed_amount'
@@ -209,7 +158,7 @@ export const ClaimsRegisterStats = () => {
                                     fixedDecimalScale={true}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={3}>
+                            <Grid size={{ xs: 12, sm: 3 }}>
                                 <NumericFormat
                                     label='Funding'
                                     name='funding'
@@ -225,7 +174,7 @@ export const ClaimsRegisterStats = () => {
                                     fixedDecimalScale={true}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={3}>
+                            <Grid size={{ xs: 12, sm: 3 }}>
                                 <NumericFormat
                                     label='Buy back'
                                     name='buy_back'
@@ -241,7 +190,7 @@ export const ClaimsRegisterStats = () => {
                                     fixedDecimalScale={true}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={3}>
+                            <Grid size={{ xs: 12, sm: 3 }}>
                                 <NumericFormat
                                     label='Numero de portafolio'
                                     name='portfolio_number'
@@ -256,10 +205,10 @@ export const ClaimsRegisterStats = () => {
                                     fixedDecimalScale={false}
                                 />
                             </Grid>
-                            <Grid item xs={12}>
+                            <Grid size={12}>
                                 <TextFieldCustom label="Observaciones" multiline name="observations" value={values.observations} onChange={handleChange} />
                             </Grid>
-                            <Grid item xs={12}>
+                            <Grid size={12}>
                                 <ButtonCustom type="submit">Registrar estadisticas</ButtonCustom>
                             </Grid>
                         </Grid>

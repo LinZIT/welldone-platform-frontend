@@ -1,14 +1,14 @@
 import BarChartRounded from "@mui/icons-material/BarChartRounded"
 import InsertChartRounded from "@mui/icons-material/InsertChartRounded"
 import PieChartRounded from "@mui/icons-material/PieChartRounded"
-import { Layout } from "../../../components/ui"
-import { DescripcionDeVista } from "../../../components/ui/content"
 import { OptionsList } from "../../../components/ui/options"
 import { Option } from "../../../interfaces"
-import { useGetGraphs } from "../../../hooks"
-import { PageLoading } from "../../../components/ui/content/PageLoading"
 import { TypographyCustom } from "../../../components/custom"
 import { AnalysisStatsTable } from "../../../components/stats/analysis"
+import { Loading } from "../../../components/ui/content/Loading"
+import { Layout } from "../../../components/ui/Layout"
+import { DescripcionDeVista } from "../../../components/ui/content/DescripcionDeVista"
+import { useGetGraphs } from "../../../hooks/useGetGraphs"
 // const { default: Swal } = await import('sweetalert2');
 // import { errorArrayLaravelTransformToArray } from "../../../helpers/functions"
 const options: Option[] = [
@@ -20,7 +20,7 @@ export const Analysis = () => {
   const { data, setData, errors, loading } = useGetGraphs({ url: '/stats/analysis' });
   // console.log({ data })
   // Loader
-  if (loading) return (<PageLoading />);
+  if (loading) return (<Loading />);
 
   return (
     <Layout>

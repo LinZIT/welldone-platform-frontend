@@ -1,11 +1,7 @@
-import { Grid } from "@mui/material"
+import Grid from "@mui/material/Grid2"
 import { Form, Formik, FormikState, FormikValues } from "formik";
-import { baseUrl } from "../../../common"
-import { useContext, useState } from "react"
-import { AuthContext } from "../../../context/auth"
+import { useState } from "react"
 import { ButtonCustom, TextFieldCustom } from "../../../components/custom"
-import { Layout } from "../../../components/ui"
-import { DescripcionDeVista } from "../../../components/ui/content"
 import { OptionsList } from "../../../components/ui/options"
 import { CustomerServiceData, Option } from "../../../interfaces"
 import BarChartRounded from "@mui/icons-material/BarChartRounded";
@@ -13,9 +9,13 @@ import PieChartRounded from "@mui/icons-material/PieChartRounded";
 import { NumericFormat } from "react-number-format"
 import { CalendarCustom } from "../../../components/custom/CalendarCustom"
 import moment from "moment"
-const { default: Swal } = await import('sweetalert2');
-import { errorArrayLaravelTransformToString } from "../../../helpers/functions"
-import { useNavigate } from "react-router-dom"
+import { useNavigate } from "react-router"
+import { IResponse } from "../../../interfaces/response-type";
+import { request } from "../../../common/request";
+import { toast } from "react-toastify";
+import { errorArrayLaravelTransformToString } from "../../../lib/functions";
+import { Layout } from "../../../components/ui/Layout";
+import { DescripcionDeVista } from "../../../components/ui/content/DescripcionDeVista";
 
 type InitialValues = Omit<CustomerServiceData, 'id' | 'created_at' | 'updated_at'>
 
@@ -58,12 +58,10 @@ export const CustomerServiceRegisterStats = () => {
         { text: 'Menu estadisticas', icon: <PieChartRounded />, path: '/stats' },
         { text: 'Estadisticas Customer Service', icon: <BarChartRounded />, path: '/stats/customer_service' },
     ]
-    const { authState } = useContext(AuthContext);
-
     const router = useNavigate();
 
     const onSubmit = async (values: FormikValues, resetForm: (nextState?: Partial<FormikState<InitialValues>> | undefined) => void) => {
-        const url = `${baseUrl}/stats/customer_service`;
+        const url = `/stats/customer_service`;
         const body = new URLSearchParams();
         for (const [key, value] of Object.entries(values)) {
             if (key === 'closing_date') {
@@ -83,74 +81,24 @@ export const CustomerServiceRegisterStats = () => {
             + Number(values.ll_triway_call)
             + Number(values.ll_claim_number_call)
             + Number(values.ll_welcome_call)))
-        const options = {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Authorization': `Bearer ${authState.token}`
-            },
-            body
-        }
 
-        try {
-            const response = await fetch(url, options);
-            switch (response.status) {
-                case 200:
-                    const { message, data } = await response.json();
-                    Swal.fire({
-                        title: 'Exito',
-                        text: message,
-                        icon: 'success',
-                        timer: 2000,
-                        timerProgressBar: true,
-                        showConfirmButton: false,
-                    });
-                    resetForm();
-                    router('/stats/customer_service');
-                    break;
-                case 400:
-                    const { status, errors } = await response.json();
-                    console.log(status)
-                    Swal.fire({
-                        title: 'Error',
-                        html: errorArrayLaravelTransformToString(errors),
-                        icon: 'error',
-                        timer: 2000,
-                        timerProgressBar: true,
-                        showConfirmButton: false,
-                    });
-                    break;
-                case 404:
-                    Swal.fire({
-                        title: 'Error',
-                        text: 'No se encontro la direccion del servidor',
-                        icon: 'error',
-                        timer: 2000,
-                        timerProgressBar: true,
-                        showConfirmButton: false,
-                    });
-                    break;
-                default:
-                    Swal.fire({
-                        title: 'Error',
-                        text: 'Ocurrio un error inesperado',
-                        icon: 'error',
-                        timer: 2000,
-                        timerProgressBar: true,
-                        showConfirmButton: false,
-                    });
-                    break;
-            }
-        } catch (error) {
-            console.log({ error })
-            Swal.fire({
-                title: 'Error',
-                text: 'No se logro conectar con el servidor',
-                icon: 'error',
-                timer: 2000,
-                timerProgressBar: true,
-                showConfirmButton: false,
-            });
+        const { status, response, err }: IResponse = await request(url, 'POST', body);
+        switch (status) {
+            case 200:
+                const { message, data } = await response.json();
+                toast.success(message);
+                resetForm();
+                router('/stats/customer_service');
+                break;
+            case 400:
+                toast.error(errorArrayLaravelTransformToString(err));
+                break;
+            case 404:
+                toast.error('No se encontro la direccion del servidor');
+                break;
+            default:
+                toast.error('Ocurrio un error inesperado');
+                break;
         }
     }
     return (
@@ -168,7 +116,7 @@ export const CustomerServiceRegisterStats = () => {
                 {({ values, handleChange, handleSubmit }) => (
                     <Form onSubmit={handleSubmit}>
                         <Grid container spacing={2} sx={{ mb: 5 }}>
-                            <Grid item xs={12}>
+                            <Grid size={12}>
                                 <CalendarCustom
                                     setValue={setDate}
                                     rest={{
@@ -179,7 +127,7 @@ export const CustomerServiceRegisterStats = () => {
                                     }}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={3}>
+                            <Grid size={{ xs: 12, sm: 3 }}>
                                 <NumericFormat
                                     customInput={TextFieldCustom}
                                     label='Solicitudes extras'
@@ -192,7 +140,7 @@ export const CustomerServiceRegisterStats = () => {
                                     onChange={handleChange}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={3}>
+                            <Grid size={{ xs: 12, sm: 3 }}>
                                 <NumericFormat
                                     customInput={TextFieldCustom}
                                     label='Tickets de asesores'
@@ -205,7 +153,7 @@ export const CustomerServiceRegisterStats = () => {
                                     onChange={handleChange}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={3}>
+                            <Grid size={{ xs: 12, sm: 3 }}>
                                 <NumericFormat
                                     customInput={TextFieldCustom}
                                     label='Ll. Inconsecuente'
@@ -218,7 +166,7 @@ export const CustomerServiceRegisterStats = () => {
                                     onChange={handleChange}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={3}>
+                            <Grid size={{ xs: 12, sm: 3 }}>
                                 <NumericFormat
                                     customInput={TextFieldCustom}
                                     label='Ll. Problemas sin solución'
@@ -231,7 +179,7 @@ export const CustomerServiceRegisterStats = () => {
                                     onChange={handleChange}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={3}>
+                            <Grid size={{ xs: 12, sm: 3 }}>
                                 <NumericFormat
                                     customInput={TextFieldCustom}
                                     label='Ll. Confirmación'
@@ -244,7 +192,7 @@ export const CustomerServiceRegisterStats = () => {
                                     onChange={handleChange}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={3}>
+                            <Grid size={{ xs: 12, sm: 3 }}>
                                 <NumericFormat
                                     customInput={TextFieldCustom}
                                     label='Ll. Problemas'
@@ -257,7 +205,7 @@ export const CustomerServiceRegisterStats = () => {
                                     onChange={handleChange}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={3}>
+                            <Grid size={{ xs: 12, sm: 3 }}>
                                 <NumericFormat
                                     customInput={TextFieldCustom}
                                     label='Ll. Reparaciones'
@@ -270,7 +218,7 @@ export const CustomerServiceRegisterStats = () => {
                                     onChange={handleChange}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={3}>
+                            <Grid size={{ xs: 12, sm: 3 }}>
                                 <NumericFormat
                                     customInput={TextFieldCustom}
                                     label='Ll. Agenda de Mold y ShrinkWrap'
@@ -283,7 +231,7 @@ export const CustomerServiceRegisterStats = () => {
                                     onChange={handleChange}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={3}>
+                            <Grid size={{ xs: 12, sm: 3 }}>
                                 <NumericFormat
                                     customInput={TextFieldCustom}
                                     label='Ll. Triway call'
@@ -296,7 +244,7 @@ export const CustomerServiceRegisterStats = () => {
                                     onChange={handleChange}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={3}>
+                            <Grid size={{ xs: 12, sm: 3 }}>
                                 <NumericFormat
                                     customInput={TextFieldCustom}
                                     label='Ll. Claim number call'
@@ -309,7 +257,7 @@ export const CustomerServiceRegisterStats = () => {
                                     onChange={handleChange}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={3}>
+                            <Grid size={{ xs: 12, sm: 3 }}>
                                 <NumericFormat
                                     customInput={TextFieldCustom}
                                     label='Ll. Encuesta de satisfacción'
@@ -322,7 +270,7 @@ export const CustomerServiceRegisterStats = () => {
                                     onChange={handleChange}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={3}>
+                            <Grid size={{ xs: 12, sm: 3 }}>
                                 <NumericFormat
                                     customInput={TextFieldCustom}
                                     label='Ll. Encuesta de marketing'
@@ -335,7 +283,7 @@ export const CustomerServiceRegisterStats = () => {
                                     onChange={handleChange}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={3}>
+                            <Grid size={{ xs: 12, sm: 3 }}>
                                 <NumericFormat
                                     customInput={TextFieldCustom}
                                     label='Ll. Welcome call'
@@ -348,7 +296,7 @@ export const CustomerServiceRegisterStats = () => {
                                     onChange={handleChange}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={3}>
+                            <Grid size={{ xs: 12, sm: 3 }}>
                                 <TextFieldCustom
                                     label='Total de llamadas'
                                     InputProps={{
@@ -369,7 +317,7 @@ export const CustomerServiceRegisterStats = () => {
                                     }
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={3}>
+                            <Grid size={{ xs: 12, sm: 3 }}>
                                 <NumericFormat
                                     customInput={TextFieldCustom}
                                     label='Emails enviados'
@@ -382,7 +330,7 @@ export const CustomerServiceRegisterStats = () => {
                                     onChange={handleChange}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={3}>
+                            <Grid size={{ xs: 12, sm: 3 }}>
                                 <NumericFormat
                                     customInput={TextFieldCustom}
                                     label='Emails gestionados'
@@ -395,7 +343,7 @@ export const CustomerServiceRegisterStats = () => {
                                     onChange={handleChange}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={3}>
+                            <Grid size={{ xs: 12, sm: 3 }}>
                                 <NumericFormat
                                     customInput={TextFieldCustom}
                                     label='Ordenes de trabajo'
@@ -408,7 +356,7 @@ export const CustomerServiceRegisterStats = () => {
                                     onChange={handleChange}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={3}>
+                            <Grid size={{ xs: 12, sm: 3 }}>
                                 <NumericFormat
                                     customInput={TextFieldCustom}
                                     label='Solicitudes de reviews en Google'
@@ -421,7 +369,7 @@ export const CustomerServiceRegisterStats = () => {
                                     onChange={handleChange}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={3}>
+                            <Grid size={{ xs: 12, sm: 3 }}>
                                 <NumericFormat
                                     customInput={TextFieldCustom}
                                     label='Reviews de Google'
@@ -434,7 +382,7 @@ export const CustomerServiceRegisterStats = () => {
                                     onChange={handleChange}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={3}>
+                            <Grid size={{ xs: 12, sm: 3 }}>
                                 <NumericFormat
                                     customInput={TextFieldCustom}
                                     label='Solicitud de reviews en BBB'
@@ -447,7 +395,7 @@ export const CustomerServiceRegisterStats = () => {
                                     onChange={handleChange}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={3}>
+                            <Grid size={{ xs: 12, sm: 3 }}>
                                 <NumericFormat
                                     customInput={TextFieldCustom}
                                     label='Reviews en BBB'
@@ -460,7 +408,7 @@ export const CustomerServiceRegisterStats = () => {
                                     onChange={handleChange}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={3}>
+                            <Grid size={{ xs: 12, sm: 3 }}>
                                 <NumericFormat
                                     customInput={TextFieldCustom}
                                     label='Reparaciones del dia'
@@ -473,7 +421,7 @@ export const CustomerServiceRegisterStats = () => {
                                     onChange={handleChange}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={3}>
+                            <Grid size={{ xs: 12, sm: 3 }}>
                                 <NumericFormat
                                     customInput={TextFieldCustom}
                                     label='Inspecciones del dia'
@@ -486,7 +434,7 @@ export const CustomerServiceRegisterStats = () => {
                                     onChange={handleChange}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={3}>
+                            <Grid size={{ xs: 12, sm: 3 }}>
                                 <NumericFormat
                                     customInput={TextFieldCustom}
                                     label='Remediaciones del dia'
@@ -499,7 +447,7 @@ export const CustomerServiceRegisterStats = () => {
                                     onChange={handleChange}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={3}>
+                            <Grid size={{ xs: 12, sm: 3 }}>
                                 <NumericFormat
                                     customInput={TextFieldCustom}
                                     label='ShrinkWrap del dia'
@@ -512,7 +460,7 @@ export const CustomerServiceRegisterStats = () => {
                                     onChange={handleChange}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={3}>
+                            <Grid size={{ xs: 12, sm: 3 }}>
                                 <NumericFormat
                                     customInput={TextFieldCustom}
                                     label='Ll. Clean Initiative'
@@ -525,7 +473,7 @@ export const CustomerServiceRegisterStats = () => {
                                     onChange={handleChange}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={3}>
+                            <Grid size={{ xs: 12, sm: 3 }}>
                                 <NumericFormat
                                     customInput={TextFieldCustom}
                                     label='C.I. para WDM'
@@ -538,7 +486,7 @@ export const CustomerServiceRegisterStats = () => {
                                     onChange={handleChange}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={3}>
+                            <Grid size={{ xs: 12, sm: 3 }}>
                                 <NumericFormat
                                     customInput={TextFieldCustom}
                                     label='WDM para C.I.'
@@ -551,10 +499,10 @@ export const CustomerServiceRegisterStats = () => {
                                     onChange={handleChange}
                                 />
                             </Grid>
-                            <Grid item xs={12}>
+                            <Grid size={{ xs: 12 }}>
                                 <TextFieldCustom label="Observaciones" multiline name="observations" value={values.observations} onChange={handleChange} />
                             </Grid>
-                            <Grid item xs={12}>
+                            <Grid size={{ xs: 12 }}>
                                 <ButtonCustom type="submit">Registrar estadisticas</ButtonCustom>
                             </Grid>
                         </Grid>

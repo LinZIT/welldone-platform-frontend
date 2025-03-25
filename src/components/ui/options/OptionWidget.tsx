@@ -1,7 +1,7 @@
 import { ReactElement } from 'react'
 import Chip, { chipClasses } from '@mui/material/Chip';
 import { useTheme } from '@mui/material/styles';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import Paper from '@mui/material/Paper';
 import { useUserStore } from '../../../store/user/UserStore';
 import { Option } from '.';

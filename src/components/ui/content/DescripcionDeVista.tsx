@@ -2,7 +2,7 @@ import { FC, ReactNode } from 'react';
 import Box from '@mui/material/Box';
 import { Typography, useTheme } from '@mui/material';
 import IconButton from '@mui/material/IconButton';
-import { To, useNavigate } from 'react-router-dom';
+import { To, useNavigate } from 'react-router';
 import NavigateBeforeRounded from '@mui/icons-material/NavigateBeforeRounded';
 import { useUserStore } from '../../../store/user/UserStore';
 

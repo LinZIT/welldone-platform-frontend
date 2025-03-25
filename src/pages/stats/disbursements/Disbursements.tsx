@@ -1,15 +1,14 @@
 import BarChartRounded from "@mui/icons-material/BarChartRounded";
 import InsertChartRounded from "@mui/icons-material/InsertChartRounded";
 import PieChartRounded from "@mui/icons-material/PieChartRounded";
-import { Layout } from "../../../components/ui";
-import { DescripcionDeVista } from "../../../components/ui/content";
 import { OptionsList } from "../../../components/ui/options";
 import { Option } from "../../../interfaces";
-import { useGetGraphs } from "../../../hooks";
-import { PageLoading } from "../../../components/ui/content/PageLoading";
 import { TypographyCustom } from "../../../components/custom";
-import { CustomerServiceStatsTable } from "../../../components/stats/cs";
 import { DisbursementsStatsTable } from "../../../components/stats/disbursements";
+import { Loading } from "../../../components/ui/content/Loading";
+import { DescripcionDeVista } from "../../../components/ui/content/DescripcionDeVista";
+import { Layout } from "../../../components/ui/Layout";
+import { useGetGraphs } from "../../../hooks/useGetGraphs";
 
 const options: Option[] = [
   { text: 'Agregar estadisticas', icon: <InsertChartRounded />, path: '/stats/disbursements/add' },
@@ -21,7 +20,7 @@ export const Disbursements = () => {
   const { data, setData, errors, loading } = useGetGraphs({ url: '/stats/disbursements' });
   // console.log({ data })
   // Loader
-  if (loading) return (<PageLoading />);
+  if (loading) return (<Loading />);
 
   return (
     <Layout>

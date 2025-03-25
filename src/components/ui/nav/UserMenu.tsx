@@ -1,7 +1,7 @@
 import React, { useContext, useState } from 'react'
 import { Avatar, Box, Divider, IconButton, Menu, MenuItem, Typography, darken, lighten, useTheme } from '@mui/material';
 
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import ExitToApp from '@mui/icons-material/ExitToAppRounded';
 import SettingsRounded from '@mui/icons-material/SettingsRounded';
 import { useUserStore } from '../../../store/user/UserStore';

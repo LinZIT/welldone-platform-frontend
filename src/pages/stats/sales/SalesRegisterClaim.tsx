@@ -1,16 +1,19 @@
-import { Grid, MenuItem } from '@mui/material'
+import { MenuItem } from '@mui/material'
+import Grid from '@mui/material/Grid2'
 import { Formik, FormikState, Form } from 'formik'
-import { useContext, useState } from 'react'
-import { baseUrl } from '../../../common'
+import { useState } from 'react'
 import { TextFieldCustom, SelectCustom, ButtonCustom } from '../../../components/custom'
 import { CalendarCustom } from '../../../components/custom/CalendarCustom'
-import { DescripcionDeVista, ModalSelector, ModalMultipleSelector } from '../../../components/ui/content'
 import moment, { Moment } from 'moment'
-import Swal from 'sweetalert2'
-import { AuthContext } from '../../../context/auth'
-import { errorArrayLaravelTransformToString } from '../../../helpers/functions'
 import { IAdjustingCompany, IInsuranceCompany, IAdviser, ITeam, IClient } from '../../../interfaces'
-import { Layout } from '../../../components/ui'
+import { toast } from 'react-toastify'
+import { errorArrayLaravelTransformToString } from '../../../lib/functions'
+import { IResponse } from '../../../interfaces/response-type'
+import { request } from '../../../common/request'
+import { Layout } from '../../../components/ui/Layout'
+import { DescripcionDeVista } from '../../../components/ui/content/DescripcionDeVista'
+import { ModalSelector } from '../../../components/ui/content/ModalSelector'
+import { ModalMultipleSelector } from '../../../components/ui/content/ModalMultipleSelector'
 type InitialValues = {
     claim_number: string;
     claim_date: string;
@@ -39,7 +42,6 @@ const initialValues: InitialValues = {
     zip_code: ''
 }
 export const SalesRegisterClaim = () => {
-    const { authState } = useContext(AuthContext);
     const [adjustingCompany, setAdjustingCompany] = useState<IAdjustingCompany | null>(null)
     const [insuranceCompany, setInsuranceCompany] = useState<IInsuranceCompany | null>(null)
     const [client, setClient] = useState<IClient | null>(null);
@@ -60,53 +62,20 @@ export const SalesRegisterClaim = () => {
         advisers.map((ad: any, i: number) => {
             body.append(`advisers[${i}]`, String(ad.id));
         })
-
-        const options = {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Authorization': `Bearer ${authState.token}`
-            },
-            body
+        const url = `/claims`;
+        const { status, response, err }: IResponse = await request(url, 'POST', body);
+        switch (status) {
+            case 200:
+                toast.success('Se ha registrado el claim')
+                break;
+            case 400:
+                const { errors } = await response.json();
+                toast.error(errorArrayLaravelTransformToString(errors))
+                break;
+            default:
+                toast.error('Ocurrio un error inesperado')
+                break;
         }
-
-        const url = `${baseUrl}/claims`;
-
-        try {
-            const response = await fetch(url, options);
-
-            switch (response.status) {
-                case 200:
-                    await Swal.fire({
-                        title: 'Exito',
-                        text: 'Se ha registrado el claim',
-                        icon: 'success',
-                    });
-                    break;
-                case 400:
-                    const { errors } = await response.json();
-                    Swal.fire({
-                        title: 'Error',
-                        html: errorArrayLaravelTransformToString(errors),
-                        icon: 'error',
-                    })
-                    break;
-                default:
-                    Swal.fire({
-                        title: 'Error',
-                        text: 'Ocurrio un error inesperado',
-                        icon: 'error',
-                    })
-                    break;
-            }
-        } catch (error) {
-            Swal.fire({
-                title: 'Error',
-                text: 'No se logro conectar al servidor',
-                icon: 'error',
-            })
-        }
-
     }
 
     return (
@@ -119,7 +88,7 @@ export const SalesRegisterClaim = () => {
                 {({ values, handleChange, handleSubmit }) => (
                     <Form onSubmit={handleSubmit}>
                         <Grid container spacing={2}>
-                            <Grid item xs={12}>
+                            <Grid size={12}>
                                 <CalendarCustom setValue={setClaimDate} rest={{
                                     name: 'claim_date',
                                     value: '',
@@ -127,29 +96,29 @@ export const SalesRegisterClaim = () => {
                                     handleChange
                                 }} />
                             </Grid>
-                            <Grid item xs={12} sm={6} >
+                            <Grid size={{ xs: 12, sm: 6 }} >
                                 <TextFieldCustom onChange={handleChange} name="claim_number" value={values.claim_number} label="Numero de claim" />
                             </Grid>
-                            <Grid item xs={12} sm={6}>
+                            <Grid size={{ xs: 12, sm: 6 }}>
                                 <TextFieldCustom onChange={handleChange} name="policy_number" value={values.policy_number} label="Poliza" />
                             </Grid>
-                            <Grid item xs={12} sm={6}>
-                                <ModalSelector team title={"Equipo"} text={"Seleccionar"} data={teamSelected} setData={setTeamSelected} url={`${baseUrl}/team`} dataProperty={"description"} dataPropertySecondary={"names"} dataPropertyAux={"surnames"} />
+                            <Grid size={{ xs: 12, sm: 6 }}>
+                                <ModalSelector team title={"Equipo"} text={"Seleccionar"} data={teamSelected} setData={setTeamSelected} url={`/team`} dataProperty={"description"} dataPropertySecondary={"names"} dataPropertyAux={"surnames"} />
 
                             </Grid>
-                            <Grid item xs={12} sm={6}>
-                                <ModalSelector title={"Cliente"} text={"Seleccionar"} data={client} setData={setClient} url={`${baseUrl}/client`} dataProperty={"names"} dataPropertySecondary='surnames' />
+                            <Grid size={{ xs: 12, sm: 6 }}>
+                                <ModalSelector title={"Cliente"} text={"Seleccionar"} data={client} setData={setClient} url={`/client`} dataProperty={"names"} dataPropertySecondary='surnames' />
                             </Grid>
-                            <Grid item xs={12} sm={6}>
-                                <ModalMultipleSelector limit={2} title={"Asesor(es)"} text={"Seleccionar"} data={advisers} setData={setAdvisers} url={`${baseUrl}/adviser`} dataProperty={"names"} />
+                            <Grid size={{ xs: 12, sm: 6 }}>
+                                <ModalMultipleSelector limit={2} title={"Asesor(es)"} text={"Seleccionar"} data={advisers} setData={setAdvisers} url={`/adviser`} dataProperty={"names"} />
                             </Grid>
-                            <Grid item xs={12} sm={6}>
-                                <ModalSelector title={"Compañia ajustadora"} text={"Seleccionar"} data={adjustingCompany} setData={setAdjustingCompany} url={`${baseUrl}/adjusting_companies`} dataProperty={"description"} />
+                            <Grid size={{ xs: 12, sm: 6 }}>
+                                <ModalSelector title={"Compañia ajustadora"} text={"Seleccionar"} data={adjustingCompany} setData={setAdjustingCompany} url={`/adjusting_companies`} dataProperty={"description"} />
                             </Grid>
-                            <Grid item xs={12} sm={6}>
-                                <ModalSelector title={"Compañia de seguros"} text={"Seleccionar "} data={insuranceCompany} setData={setInsuranceCompany} url={`${baseUrl}/insurance_companies`} dataProperty={"description"} />
+                            <Grid size={{ xs: 12, sm: 6 }}>
+                                <ModalSelector title={"Compañia de seguros"} text={"Seleccionar "} data={insuranceCompany} setData={setInsuranceCompany} url={`/insurance_companies`} dataProperty={"description"} />
                             </Grid>
-                            <Grid item xs={12} sm={6}>
+                            <Grid size={{ xs: 12, sm: 6 }}>
                                 {/* <TextFieldCustom onChange={handleChange} name="cause" value={values.cause} label="Causa" /> */}
                                 <SelectCustom
                                     value={values.cause}
@@ -171,7 +140,7 @@ export const SalesRegisterClaim = () => {
                                     <MenuItem value='Weather Related - Window'>Weather Related - Window</MenuItem>
                                 </SelectCustom>
                             </Grid>
-                            <Grid item xs={12} sm={6}>
+                            <Grid size={{ xs: 12, sm: 6 }}>
                                 <SelectCustom
                                     value={values.location_of_damage}
                                     onChange={handleChange}
@@ -198,7 +167,7 @@ export const SalesRegisterClaim = () => {
                                 </SelectCustom>
                             </Grid>
 
-                            <Grid item xs={12} sm={6}>
+                            <Grid size={{ xs: 12, sm: 6 }}>
                                 <SelectCustom
                                     value={values.state}
                                     onChange={handleChange}
@@ -212,7 +181,7 @@ export const SalesRegisterClaim = () => {
                                     <MenuItem value='TX'>TX</MenuItem>
                                 </SelectCustom>
                             </Grid>
-                            <Grid item xs={12} sm={6}>
+                            <Grid size={{ xs: 12, sm: 6 }}>
                                 {
                                     values.state !== 'CA' && values.state !== 'FL' && values.state !== 'TX' && (
                                         <SelectCustom
@@ -342,13 +311,13 @@ export const SalesRegisterClaim = () => {
                                     )
                                 }
                             </Grid>
-                            <Grid item xs={12} sm={6}>
+                            <Grid size={{ xs: 12, sm: 6 }}>
                                 <TextFieldCustom onChange={handleChange} multiline name="address" value={values.address} label="Direccion" />
                             </Grid>
-                            <Grid item xs={12} sm={6}>
+                            <Grid size={{ xs: 12, sm: 6 }}>
                                 <TextFieldCustom onChange={handleChange} name="zip_code" value={values.zip_code} label="ZIP Code" />
                             </Grid>
-                            <Grid item xs={12}>
+                            <Grid size={12}>
                                 <ButtonCustom type="submit">Registrar</ButtonCustom>
                             </Grid>
                         </Grid>

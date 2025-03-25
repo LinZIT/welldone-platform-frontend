@@ -1,11 +1,7 @@
 import { Grid } from "@mui/material"
 import { Form, Formik, FormikState, FormikValues } from "formik"
-import { baseUrl } from "../../../common"
-import { useContext, useState } from "react"
-import { AuthContext } from "../../../context/auth"
+import { useState } from "react"
 import { ButtonCustom, TextFieldCustom } from "../../../components/custom"
-import { Layout } from "../../../components/ui"
-import { DescripcionDeVista } from "../../../components/ui/content"
 import { OptionsList } from "../../../components/ui/options"
 import { DisbursementsData, Option } from "../../../interfaces"
 import BarChartRounded from "@mui/icons-material/BarChartRounded";
@@ -13,9 +9,13 @@ import PieChartRounded from "@mui/icons-material/PieChartRounded";
 import { NumericFormat } from "react-number-format"
 import { CalendarCustom } from "../../../components/custom/CalendarCustom"
 import moment from "moment"
-const { default: Swal } = await import('sweetalert2');
-import { errorArrayLaravelTransformToString } from "../../../helpers/functions"
-import { useNavigate } from "react-router-dom"
+import { useNavigate } from "react-router"
+import { IResponse } from "../../../interfaces/response-type"
+import { request } from "../../../common/request"
+import { toast } from "react-toastify"
+import { DescripcionDeVista } from "../../../components/ui/content/DescripcionDeVista"
+import { Layout } from "../../../components/ui/Layout"
+import { errorArrayLaravelTransformToString } from "../../../lib/functions"
 
 type InitialValues = Omit<DisbursementsData, 'id' | 'created_at' | 'updated_at'>
 
@@ -34,85 +34,34 @@ export const DisbursementsRegisterStats = () => {
         { text: 'Menu estadisticas', icon: <PieChartRounded />, path: '/stats' },
         { text: 'Estadisticas Disbursements', icon: <BarChartRounded />, path: '/stats/disbursements' },
     ]
-    const { authState } = useContext(AuthContext);
 
     const router = useNavigate();
 
     const onSubmit = async (values: FormikValues, resetForm: (nextState?: Partial<FormikState<InitialValues>> | undefined) => void) => {
-        const url = `${baseUrl}/stats/disbursements`;
+        const url = `/stats/disbursements`;
         const body = new URLSearchParams();
         for (const [key, value] of Object.entries(values)) {
             if (key !== 'closing_date') body.append(key, String(value).replace('$', '').replace(',', ''));
         }
         body.append('closing_date', moment(date).format('YYYY-MM-DD'));
-        const options = {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Authorization': `Bearer ${authState.token}`
-            },
-            body
-        }
-
-        try {
-            const response = await fetch(url, options);
-            switch (response.status) {
-                case 200:
-                    const { message, data } = await response.json();
-                    Swal.fire({
-                        title: 'Exito',
-                        text: message,
-                        icon: 'success',
-                        timer: 2000,
-                        timerProgressBar: true,
-                        showConfirmButton: false,
-                    });
-                    resetForm();
-                    router('/stats/disbursements');
-                    break;
-                case 400:
-                    const { status, errors } = await response.json();
-                    console.log(status)
-                    Swal.fire({
-                        title: 'Error',
-                        html: errorArrayLaravelTransformToString(errors),
-                        icon: 'error',
-                        timer: 2000,
-                        timerProgressBar: true,
-                        showConfirmButton: false,
-                    });
-                    break;
-                case 404:
-                    Swal.fire({
-                        title: 'Error',
-                        text: 'No se encontro la direccion del servidor',
-                        icon: 'error',
-                        timer: 2000,
-                        timerProgressBar: true,
-                        showConfirmButton: false,
-                    });
-                    break;
-                default:
-                    Swal.fire({
-                        title: 'Error',
-                        text: 'Ocurrio un error inesperado',
-                        icon: 'error',
-                        timer: 2000,
-                        timerProgressBar: true,
-                        showConfirmButton: false,
-                    });
-                    break;
-            }
-        } catch (error) {
-            console.log({ error })
-            Swal.fire({
-                title: 'Error',
-                text: 'No se logro conectar con el servidor',
-                icon: 'error',
-                timer: 2000,
-                timerProgressBar: true,
-                showConfirmButton: false,
-            });
+        const { status, response, err }: IResponse = await request(url, 'POST', body);
+        switch (status) {
+            case 200:
+                const { message, data } = await response.json();
+                toast.success(message)
+                resetForm();
+                router('/stats/human_resources');
+                break;
+            case 400:
+                const { errors } = await response.json();
+                toast.error(errorArrayLaravelTransformToString(errors));
+                break;
+            case 404:
+                toast.error('No se encontro la direccion del servidor')
+                break;
+            default:
+                toast.error('Ocurrio un error inesperado')
+                break;
         }
     }
     return (

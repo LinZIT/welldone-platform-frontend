@@ -4,7 +4,7 @@ import { useUserStore } from "../store/user/UserStore";
 export const request = async (_url: string, method: 'POST' | 'GET' | 'PUT', body?: URLSearchParams, customUrl?: string) => {
 
     const url = customUrl ?? `${import.meta.env.VITE_BACKEND_API_URL}${_url}`;
-    const options = method !== 'GET' ?
+    const options = method.toUpperCase() !== 'GET' ?
         {
             method,
             headers: {

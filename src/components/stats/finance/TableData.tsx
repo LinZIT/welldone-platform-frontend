@@ -3,15 +3,15 @@ import moment from "moment";
 import { FinanceData } from "../../../interfaces";
 import { TextDialog } from "../../ui/content/TextDialog";
 import { ChangeEvent, useContext, useState } from "react";
-import { AuthContext } from "../../../context/auth";
 import { TextFieldCustom } from "../../custom";
-import { baseUrl } from "../../../common";
-const { default: Swal } = await import('sweetalert2');
 import CheckRounded from "@mui/icons-material/CheckRounded";
 import CancelRounded from "@mui/icons-material/CancelRounded";
 import EditRounded from "@mui/icons-material/EditRounded";
-import { errorArrayLaravelTransformToArray } from "../../../helpers/functions";
 import { NumericFormat } from "react-number-format";
+import { IResponse } from "../../../interfaces/response-type";
+import { request } from "../../../common/request";
+import { toast } from "react-toastify";
+import { errorArrayLaravelTransformToString } from "../../../lib/functions";
 
 type InitialValues = Omit<FinanceData, 'id' | 'created_at' | 'updated_at' | 'closing_date' | 'observations'>
 
@@ -34,7 +34,6 @@ export const TableData = ({ data }: DataProps) => {
     const [info, setInfo] = useState<FinanceData>(data);
     const [values, setValues] = useState<InitialValues>(initialValues);
     const [editing, setEditing] = useState<boolean>(false);
-    const { authState } = useContext(AuthContext)
     const today = moment();
     const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
         setValues({ ...values, [e.target.name]: e.target.value })
@@ -45,75 +44,28 @@ export const TableData = ({ data }: DataProps) => {
 
     const onSubmit = async () => {
         if (Number(values.productivity_percentage.replace('%', '')) > 100) return;
-        const url = `${baseUrl}/stats/finance/${data.id}`;
+        const url = `/stats/finance/${data.id}`;
         const body = new URLSearchParams();
         console.log({ values })
         for (const [key, value] of Object.entries(values)) {
             body.append(key, String(value).replace('$', '').replace(',', '').replace('%', ''));
         }
         body.append('income_vs_expenses_percentage', `${Number((Number(String(values.gross_income).replace('$', '').replace(',', '')) / Number(String(values.expenses).replace('$', '').replace(',', ''))) - 1).toFixed(2)}`);
-        const options = {
-            method: 'PUT',
-            headers: {
-                'Accept': 'application/json',
-                'Authorization': `Bearer ${authState.token}`
-            },
-            body
-        }
-
-        try {
-            const response = await fetch(url, options);
-            switch (response.status) {
-                case 200:
-                    const { data } = await response.json();
-                    setInfo(data)
-                    Swal.fire({
-                        title: 'Exito',
-                        text: 'Se ha actualizado la información',
-                        icon: 'success',
-                        timer: 2000,
-                        timerProgressBar: true,
-                        toast: true,
-                        position: 'bottom',
-                        showConfirmButton: false,
-
-                    });
-                    setEditing(false);
-                    break;
-                case 400:
-                    const { errors } = await response.json();
-                    Swal.fire({
-                        title: 'Error',
-                        text: errorArrayLaravelTransformToArray(errors),
-                        icon: 'error',
-                        timer: 2000,
-                        timerProgressBar: true,
-                        showConfirmButton: false,
-                    });
-                    break;
-                default:
-                    Swal.fire({
-                        title: 'Error',
-                        text: `Ocurrio un error inesperado (${response.status})`,
-                        icon: 'error',
-                        timer: 2000,
-                        timerProgressBar: true,
-                        position: 'bottom',
-                        showConfirmButton: false,
-                        toast: true
-                    });
-            }
-        } catch (error) {
-            Swal.fire({
-                title: 'Error',
-                text: 'No se ha podido actualizar la información',
-                icon: 'error',
-                timer: 2000,
-                toast: true,
-                position: 'bottom',
-                timerProgressBar: true,
-                showConfirmButton: false,
-            });
+        const { status, response, err }: IResponse = await request(url, 'PUT', body)
+        switch (status) {
+            case 200:
+                const { data } = await response.json();
+                setInfo(data)
+                toast.success('Se ha actualizado la información')
+                setEditing(false);
+                break;
+            case 400:
+                const { errors } = await response.json();
+                toast.error(errorArrayLaravelTransformToString(errors))
+                break;
+            default:
+                toast.error('No se ha podido actualizar la información');
+                break;
         }
     }
     return (

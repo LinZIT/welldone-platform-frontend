@@ -1,11 +1,7 @@
-import { Grid } from "@mui/material"
+import Grid from "@mui/material/Grid2"
 import { Form, Formik, FormikState, FormikValues } from "formik";
-import { baseUrl } from "../../../common"
-import { useContext, useState } from "react"
-import { AuthContext } from "../../../context/auth"
+import { useState } from "react"
 import { ButtonCustom, TextFieldCustom } from "../../../components/custom"
-import { Layout } from "../../../components/ui"
-import { DescripcionDeVista } from "../../../components/ui/content"
 import { OptionsList } from "../../../components/ui/options"
 import { IncomeData, Option } from "../../../interfaces"
 import BarChartRounded from "@mui/icons-material/BarChartRounded";
@@ -13,9 +9,13 @@ import PieChartRounded from "@mui/icons-material/PieChartRounded";
 import { NumericFormat } from "react-number-format"
 import { CalendarCustom } from "../../../components/custom/CalendarCustom"
 import moment from "moment"
-const { default: Swal } = await import('sweetalert2');
-import { errorArrayLaravelTransformToString } from "../../../helpers/functions"
-import { useNavigate } from "react-router-dom"
+import { useNavigate } from "react-router"
+import { IResponse } from "../../../interfaces/response-type";
+import { request } from "../../../common/request";
+import { toast } from "react-toastify";
+import { errorArrayLaravelTransformToString } from "../../../lib/functions";
+import { Layout } from "../../../components/ui/Layout";
+import { DescripcionDeVista } from "../../../components/ui/content/DescripcionDeVista";
 
 type InitialValues = Omit<IncomeData, 'id' | 'created_at' | 'updated_at'>
 
@@ -40,12 +40,10 @@ export const IncomeRegisterStats = () => {
         { text: 'Menu estadisticas', icon: <PieChartRounded />, path: '/stats' },
         { text: 'Estadisticas Income', icon: <BarChartRounded />, path: '/stats/income' },
     ]
-    const { authState } = useContext(AuthContext);
-
     const router = useNavigate();
 
     const onSubmit = async (values: FormikValues, resetForm: (nextState?: Partial<FormikState<InitialValues>> | undefined) => void) => {
-        const url = `${baseUrl}/stats/income`;
+        const url = `/stats/income`;
         const body = new URLSearchParams();
         for (const [key, value] of Object.entries(values)) {
             if (key !== 'closing_date' && key !== 'global_income') body.append(key, String(value).replace('$', '').replace(',', '').replace('%', ''));
@@ -53,71 +51,25 @@ export const IncomeRegisterStats = () => {
         body.append('closing_date', moment(date).format('YYYY-MM-DD'));
         body.append('global_income', String((Number(String(values.income_by_portfolio).replace('$', '').replace(',', '')) + Number(String(values.income_by_negotiation).replace('$', '').replace(',', ''))).toFixed(2)));
         console.log(body.toString());
-        const options = {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Authorization': `Bearer ${authState.token}`
-            },
-            body
-        }
-
-        try {
-            const response = await fetch(url, options);
-            switch (response.status) {
-                case 200:
-                    const { message } = await response.json();
-                    Swal.fire({
-                        title: 'Exito',
-                        text: message,
-                        icon: 'success',
-                        timer: 2000,
-                        timerProgressBar: true,
-                        showConfirmButton: false,
-                    });
-                    resetForm();
-                    router('/stats/Income');
-                    break;
-                case 400:
-                    const { status, errors } = await response.json();
-                    console.error({ status, errors })
-                    Swal.fire({
-                        title: 'Error',
-                        html: errorArrayLaravelTransformToString(errors),
-                        icon: 'error',
-                    });
-                    break;
-                case 404:
-                    Swal.fire({
-                        title: 'Error',
-                        text: 'No se encontro la direccion del servidor',
-                        icon: 'error',
-                        timer: 2000,
-                        timerProgressBar: true,
-                        showConfirmButton: false,
-                    });
-                    break;
-                default:
-                    Swal.fire({
-                        title: 'Error',
-                        text: 'Ocurrio un error inesperado',
-                        icon: 'error',
-                        timer: 2000,
-                        timerProgressBar: true,
-                        showConfirmButton: false,
-                    });
-                    break;
-            }
-        } catch (error) {
-            console.log({ error })
-            Swal.fire({
-                title: 'Error',
-                text: 'No se logro conectar con el servidor',
-                icon: 'error',
-                timer: 2000,
-                timerProgressBar: true,
-                showConfirmButton: false,
-            });
+        const { status, response, err }: IResponse = await request(url, 'POST', body);
+        switch (status) {
+            case 200:
+                const { message } = await response.json();
+                toast.success(message);
+                resetForm();
+                router('/stats/Income');
+                break;
+            case 400:
+                const { errors } = await response.json();
+                console.error({ errors })
+                toast.error(errorArrayLaravelTransformToString(errors))
+                break;
+            case 404:
+                toast.error('No se encontro la direccion del servidor');
+                break;
+            default:
+                toast.error('Ocurrio un error inesperado');
+                break;
         }
     }
     return (
@@ -135,7 +87,7 @@ export const IncomeRegisterStats = () => {
                 {({ values, handleChange, handleSubmit }) => (
                     <Form onSubmit={handleSubmit}>
                         <Grid container spacing={2} sx={{ mb: 5 }}>
-                            <Grid item xs={12} sm={6}>
+                            <Grid size={{ xs: 12, sm: 6 }}>
                                 <CalendarCustom
                                     setValue={setDate}
                                     rest={{
@@ -146,7 +98,7 @@ export const IncomeRegisterStats = () => {
                                     }}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={3}>
+                            <Grid size={{ xs: 12, sm: 3 }}>
                                 <NumericFormat
                                     customInput={TextFieldCustom}
                                     label='N° de facturas por negociacion'
@@ -159,7 +111,7 @@ export const IncomeRegisterStats = () => {
                                     onChange={handleChange}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={3}>
+                            <Grid size={{ xs: 12, sm: 3 }}>
                                 <NumericFormat
                                     customInput={TextFieldCustom}
                                     label='Valor de facturas por negociacion'
@@ -175,7 +127,7 @@ export const IncomeRegisterStats = () => {
                                     onChange={handleChange}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={3}>
+                            <Grid size={{ xs: 12, sm: 3 }}>
                                 <NumericFormat
                                     customInput={TextFieldCustom}
                                     label='Cuentas por cobrar por negociacion'
@@ -191,7 +143,7 @@ export const IncomeRegisterStats = () => {
                                     onChange={handleChange}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={3}>
+                            <Grid size={{ xs: 12, sm: 3 }}>
                                 <NumericFormat
                                     customInput={TextFieldCustom}
                                     label='Ingresos por negociacion'
@@ -207,7 +159,7 @@ export const IncomeRegisterStats = () => {
                                     onChange={handleChange}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={3}>
+                            <Grid size={{ xs: 12, sm: 3 }}>
                                 <NumericFormat
                                     customInput={TextFieldCustom}
                                     label='Cobros'
@@ -220,7 +172,7 @@ export const IncomeRegisterStats = () => {
                                     onChange={handleChange}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={3}>
+                            <Grid size={{ xs: 12, sm: 3 }}>
                                 <NumericFormat
                                     customInput={TextFieldCustom}
                                     label='N° de llamadas'
@@ -233,7 +185,7 @@ export const IncomeRegisterStats = () => {
                                     onChange={handleChange}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={3}>
+                            <Grid size={{ xs: 12, sm: 3 }}>
                                 <NumericFormat
                                     customInput={TextFieldCustom}
                                     label='N° de llamadas efectivas'
@@ -246,7 +198,7 @@ export const IncomeRegisterStats = () => {
                                     onChange={handleChange}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={3}>
+                            <Grid size={{ xs: 12, sm: 3 }}>
                                 <NumericFormat
                                     customInput={TextFieldCustom}
                                     label='Ingresos por portafolio'
@@ -262,7 +214,7 @@ export const IncomeRegisterStats = () => {
                                     onChange={handleChange}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={3}>
+                            <Grid size={{ xs: 12, sm: 3 }}>
                                 <NumericFormat
                                     customInput={TextFieldCustom}
                                     label='Cuentas por cobrar por portafolio'
@@ -278,7 +230,7 @@ export const IncomeRegisterStats = () => {
                                     onChange={handleChange}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={3}>
+                            <Grid size={{ xs: 12, sm: 3 }}>
                                 <NumericFormat
                                     customInput={TextFieldCustom}
                                     label='Ingreso global'
@@ -297,10 +249,10 @@ export const IncomeRegisterStats = () => {
                                     onChange={handleChange}
                                 />
                             </Grid>
-                            <Grid item xs={12}>
+                            <Grid size={12}>
                                 <TextFieldCustom label="Observaciones" multiline name="observations" value={values.observations} onChange={handleChange} />
                             </Grid>
-                            <Grid item xs={12}>
+                            <Grid size={12}>
                                 <ButtonCustom type="submit">Registrar estadisticas</ButtonCustom>
                             </Grid>
                         </Grid>

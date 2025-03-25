@@ -1,6 +1,6 @@
 import { AppBar, Toolbar, Box, useTheme, Badge, Container, IconButton, lighten } from "@mui/material";
 import Grid from "@mui/material/Grid2";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { useEffect } from "react";
 import { NotificationsOutlined, NotificationsRounded } from "@mui/icons-material";
 import { useUserStore } from "../../../store/user/UserStore";

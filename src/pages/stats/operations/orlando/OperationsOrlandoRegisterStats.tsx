@@ -1,22 +1,22 @@
 import BarChartRounded from "@mui/icons-material/BarChartRounded";
 import PieChartRounded from "@mui/icons-material/PieChartRounded";
-import { Grid } from "@mui/material";
+import Grid from "@mui/material/Grid2";
 import { FormikValues, FormikState, Formik, Form } from "formik";
 import moment, { Moment } from "moment";
-import { useState, useContext } from "react";
+import { useState } from "react";
 import { NumericFormat } from "react-number-format";
-import { useNavigate } from "react-router-dom";
-const { default: Swal } = await import('sweetalert2');
-import { baseUrl } from "../../../../common";
+import { useNavigate } from "react-router";
 import { TextFieldCustom, ButtonCustom } from "../../../../components/custom";
 import { CalendarCustom } from "../../../../components/custom/CalendarCustom";
-import { Layout } from "../../../../components/ui";
-import { DescripcionDeVista } from "../../../../components/ui/content";
 import { OptionsList } from "../../../../components/ui/options";
-import { AuthContext } from "../../../../context/auth";
-import { errorArrayLaravelTransformToString } from "../../../../helpers/functions";
 import { OperationsOrlandoData } from "../../../../interfaces/operations-data-type";
 import { Option } from "../../../../interfaces";
+import { IResponse } from "../../../../interfaces/response-type";
+import { request } from "../../../../common/request";
+import { toast } from "react-toastify";
+import { errorArrayLaravelTransformToString } from "../../../../lib/functions";
+import { Layout } from "../../../../components/ui/Layout";
+import { DescripcionDeVista } from "../../../../components/ui/content/DescripcionDeVista";
 
 type InitialValues = Omit<OperationsOrlandoData, 'id' | 'created_at' | 'updated_at'>
 
@@ -40,82 +40,34 @@ export const OperationsOrlandoRegisterStats = () => {
         { text: 'Menu estadisticas', icon: <PieChartRounded />, path: '/stats' },
         { text: 'Estadisticas Operations Orlando', icon: <BarChartRounded />, path: '/stats/operations/Orlando' },
     ]
-    const { authState } = useContext(AuthContext);
-
     const router = useNavigate();
 
     const onSubmit = async (values: FormikValues, resetForm: (nextState?: Partial<FormikState<InitialValues>> | undefined) => void) => {
-        const url = `${baseUrl}/stats/operations/orlando`;
+        const url = `/stats/operations/orlando`;
         const body = new URLSearchParams();
         for (const [key, value] of Object.entries(values)) {
             if (key !== 'closing_date') body.append(key, String(value).replace('$', '').replace(',', '').replace('%', ''));
         }
         body.append('closing_date', moment(date).format('YYYY-MM-DD'));
-        const options = {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Authorization': `Bearer ${authState.token}`
-            },
-            body
-        }
-
-        try {
-            const response = await fetch(url, options);
-            switch (response.status) {
-                case 200:
-                    const { message } = await response.json();
-                    Swal.fire({
-                        title: 'Exito',
-                        text: message,
-                        icon: 'success',
-                        timer: 2000,
-                        timerProgressBar: true,
-                        showConfirmButton: false,
-                    });
-                    resetForm();
-                    router('/stats/operations/orlando');
-                    break;
-                case 400:
-                    const { status, errors } = await response.json();
-                    console.error({ status, errors })
-                    Swal.fire({
-                        title: 'Error',
-                        html: errorArrayLaravelTransformToString(errors),
-                        icon: 'error',
-                    });
-                    break;
-                case 404:
-                    Swal.fire({
-                        title: 'Error',
-                        text: 'No se encontro la direccion del servidor',
-                        icon: 'error',
-                        timer: 2000,
-                        timerProgressBar: true,
-                        showConfirmButton: false,
-                    });
-                    break;
-                default:
-                    Swal.fire({
-                        title: 'Error',
-                        text: 'Ocurrio un error inesperado',
-                        icon: 'error',
-                        timer: 2000,
-                        timerProgressBar: true,
-                        showConfirmButton: false,
-                    });
-                    break;
-            }
-        } catch (error) {
-            console.log({ error })
-            Swal.fire({
-                title: 'Error',
-                text: 'No se logro conectar con el servidor',
-                icon: 'error',
-                timer: 2000,
-                timerProgressBar: true,
-                showConfirmButton: false,
-            });
+        const { status, response, err }: IResponse = await request(url, 'POST', body);
+        switch (status) {
+            case 200:
+                const { message } = await response.json();
+                toast.success(message)
+                resetForm();
+                router('/stats/operations/california');
+                break;
+            case 400:
+                const { errors } = await response.json();
+                console.error({ errors })
+                toast.error(errorArrayLaravelTransformToString(errors))
+                break;
+            case 404:
+                toast.error('No se encontro la direccion del servidor')
+                break;
+            default:
+                toast.error('Ocurrio un error inesperado')
+                break;
         }
     }
     return (
@@ -133,7 +85,7 @@ export const OperationsOrlandoRegisterStats = () => {
                 {({ values, handleChange, handleSubmit }) => (
                     <Form onSubmit={handleSubmit}>
                         <Grid container spacing={2} sx={{ mb: 5 }}>
-                            <Grid item xs={12} sm={6}>
+                            <Grid size={{ xs: 12, sm: 6 }}>
                                 <CalendarCustom
                                     setValue={setDate}
                                     rest={{
@@ -144,7 +96,7 @@ export const OperationsOrlandoRegisterStats = () => {
                                     }}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={3}>
+                            <Grid size={{ xs: 12, sm: 3 }}>
                                 <NumericFormat
                                     customInput={TextFieldCustom}
                                     label="Week"
@@ -157,7 +109,7 @@ export const OperationsOrlandoRegisterStats = () => {
                                     onChange={handleChange}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={3}>
+                            <Grid size={{ xs: 12, sm: 3 }}>
                                 <NumericFormat
                                     customInput={TextFieldCustom}
                                     label="Roof"
@@ -170,7 +122,7 @@ export const OperationsOrlandoRegisterStats = () => {
                                     onChange={handleChange}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={3}>
+                            <Grid size={{ xs: 12, sm: 3 }}>
                                 <NumericFormat
                                     customInput={TextFieldCustom}
                                     label="Water"
@@ -183,7 +135,7 @@ export const OperationsOrlandoRegisterStats = () => {
                                     onChange={handleChange}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={3}>
+                            <Grid size={{ xs: 12, sm: 3 }}>
                                 <NumericFormat
                                     customInput={TextFieldCustom}
                                     label="Mold"
@@ -196,7 +148,7 @@ export const OperationsOrlandoRegisterStats = () => {
                                     onChange={handleChange}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={3}>
+                            <Grid size={{ xs: 12, sm: 3 }}>
                                 <NumericFormat
                                     customInput={TextFieldCustom}
                                     label="Mold testing"
@@ -209,7 +161,7 @@ export const OperationsOrlandoRegisterStats = () => {
                                     onChange={handleChange}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={3}>
+                            <Grid size={{ xs: 12, sm: 3 }}>
                                 <NumericFormat
                                     customInput={TextFieldCustom}
                                     label="Shrink Wrap"
@@ -222,7 +174,7 @@ export const OperationsOrlandoRegisterStats = () => {
                                     onChange={handleChange}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={3}>
+                            <Grid size={{ xs: 12, sm: 3 }}>
                                 <NumericFormat
                                     customInput={TextFieldCustom}
                                     label="Inspections"
@@ -235,7 +187,7 @@ export const OperationsOrlandoRegisterStats = () => {
                                     onChange={handleChange}
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={3}>
+                            <Grid size={{ xs: 12, sm: 3 }}>
                                 <NumericFormat
                                     customInput={TextFieldCustom}
                                     label="Second Tarp"
@@ -248,10 +200,10 @@ export const OperationsOrlandoRegisterStats = () => {
                                     onChange={handleChange}
                                 />
                             </Grid>
-                            <Grid item xs={12}>
+                            <Grid size={12}>
                                 <TextFieldCustom label="Observaciones" multiline name="observations" value={values.observations} onChange={handleChange} />
                             </Grid>
-                            <Grid item xs={12}>
+                            <Grid size={12}>
                                 <ButtonCustom type="submit">Registrar estadisticas</ButtonCustom>
                             </Grid>
                         </Grid>

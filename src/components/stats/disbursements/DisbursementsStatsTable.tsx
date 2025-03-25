@@ -2,8 +2,9 @@ import { Dispatch, FC, SetStateAction } from "react"
 import { TableContainer, Paper, Table, TableHead, TableRow, TableCell, TableBody, Pagination, Box } from "@mui/material";
 import { DisbursementsData } from "../../../interfaces";
 import { TableData } from ".";
-import { useUserStore } from "../../../store/user/UserStore";
 import { toast } from "react-toastify";
+import { request } from "../../../common/request";
+import { IResponse } from "../../../interfaces/response-type";
 
 interface Props {
     data: any;
@@ -11,39 +12,24 @@ interface Props {
 }
 export const DisbursementsStatsTable: FC<Props> = ({ data, setData }) => {
 
-    const user = useUserStore(state => state.user);
-
     const changePage = async (event: React.ChangeEvent<unknown>, page: number) => {
-        const url = `${data?.path}?page=${page}`
-        const options = {
-            method: "GET",
-            headers: {
-                'Accept': 'application/json',
-                'Authorization': `Bearer ${user.token}`
-            }
+        const url = `/${data?.path}?page=${page}`
+        const { status, response, err }: IResponse = await request(url, 'GET');
+        switch (status) {
+            case 200:
+                const { data } = await response.json();
+                setData(data)
+                break;
+            case 400:
+                toast.error('Ocurrio un error al conectar con el servidor')
+                break;
+            case 500:
+                toast.error('Ocurrio un error al conectar con el servidor')
+                break;
+            default:
+                toast.error('Ocurrio un error al conectar con el servidor')
+                break;
         }
-        try {
-            const response = await fetch(url, options);
-            switch (response.status) {
-                case 200:
-                    const { data } = await response.json();
-                    setData(data)
-                    break;
-                case 400:
-                    toast.error('Ocurrio un error al conectar con el servidor')
-                    break;
-                case 500:
-                    toast.error('Ocurrio un error al conectar con el servidor')
-                    break;
-                default:
-                    toast.error('Ocurrio un error al conectar con el servidor')
-                    break;
-            }
-        } catch (error) {
-            console.log({ error });
-            toast.error('Ocurrio un error al conectar con el servidor')
-        }
-        return;
     }
     return (
         <>

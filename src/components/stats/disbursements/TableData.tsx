@@ -11,6 +11,8 @@ import { request } from "../../../common/request";
 import { toast } from "react-toastify";
 import { useUserStore } from "../../../store/user/UserStore";
 import { TextDialog } from "../../ui/content/TextDialog";
+import { errorArrayLaravelTransformToString } from "../../../lib/functions";
+import { IResponse } from "../../../interfaces/response-type";
 
 type InitialValues = Omit<DisbursementsData, 'id' | 'created_at' | 'updated_at' | 'closing_date' | 'observations'>
 
@@ -43,8 +45,8 @@ export const TableData = ({ data }: DataProps) => {
         for (const [key, value] of Object.entries(values)) {
             body.append(key, String(value).replace('$', '').replace(',', ''));
         }
-        const { status, response, err }: { status: number, response: any, err: any } = await request(url, 'PUT', body)
-        switch (response.status) {
+        const { status, response, err }: IResponse = await request(url, 'PUT', body)
+        switch (status) {
             case 200:
                 const { data } = await response.json();
                 setInfo(data)
@@ -53,8 +55,7 @@ export const TableData = ({ data }: DataProps) => {
                 break;
             case 400:
                 const { errors } = await response.json();
-                // text: errorArrayLaravelTransformToArray(errors),
-                toast.error(`Ocurrio un error inesperado (${response.status})`);
+                toast.error(errorArrayLaravelTransformToString(errors))
                 break;
             default:
                 toast.error('No se ha podido actualizar la información');

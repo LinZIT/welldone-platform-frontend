@@ -79,6 +79,7 @@ interface State {
     validateToken: () => Promise<Response>;
     changeTheme: (theme: string) => Promise<Response>;
     changeColor: (color: string) => Promise<Response>;
+    resetUser: () => void;
 }
 export const useUserStore = create<State>((set, get) => ({
     user: initialState,
@@ -181,4 +182,5 @@ export const useUserStore = create<State>((set, get) => ({
                 return { status: false, message: "Ocurrio un error inesperado" }
         }
     },
+    resetUser: () => set({ user: initialState }),
 }));

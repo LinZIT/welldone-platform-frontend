@@ -1,19 +1,18 @@
 import BarChartRounded from "@mui/icons-material/BarChartRounded";
 import InsertChartRounded from "@mui/icons-material/InsertChartRounded";
-import PieChartRounded from "@mui/icons-material/PieChartRounded";
 import LocationCityRounded from "@mui/icons-material/LocationCityRounded";
-import { Layout } from "../../../components/ui";
-import { DescripcionDeVista } from "../../../components/ui/content";
 import { OptionsList } from "../../../components/ui/options";
 import { Option } from "../../../interfaces";
-import { useGetGraphs } from "../../../hooks";
-import { PageLoading } from "../../../components/ui/content/PageLoading";
 import { TypographyCustom } from "../../../components/custom";
 import { SalesStatsTable } from "../../../components/stats/sales";
 import GroupRounded from "@mui/icons-material/GroupRounded";
 import Diversity3Icon from '@mui/icons-material/Diversity3';
 import BusinessCenterRounded from "@mui/icons-material/BusinessCenterRounded";
 import BusinessRounded from "@mui/icons-material/BusinessRounded";
+import { Loading } from "../../../components/ui/content/Loading";
+import { DescripcionDeVista } from "../../../components/ui/content/DescripcionDeVista";
+import { Layout } from "../../../components/ui/Layout";
+import { useGetGraphs } from "../../../hooks/useGetGraphs";
 const options: Option[] = [
   { text: 'Agregar claim', icon: <InsertChartRounded />, path: '/stats/sales/claims/add' },
   { text: 'Graficas PowerBI', icon: <BarChartRounded />, path: 'https://app.powerbi.com/view?r=eyJrIjoiOTgwYWYwMDYtYzFjYi00ZGYwLTk0OWEtMzkyMTJiYTg3OGQ4IiwidCI6ImFkYjQwNTM2LWJlODAtNDc3ZC05MDIxLTFlMGIzMTZiMjRmMCIsImMiOjJ9', external: true },
@@ -28,7 +27,7 @@ const options: Option[] = [
 export const Sales = () => {
   const { data, setData, errors, loading } = useGetGraphs({ url: '/stats/sales' });
   // Loader
-  if (loading) return (<PageLoading />);
+  if (loading) return (<Loading />);
 
   return (
     <Layout>

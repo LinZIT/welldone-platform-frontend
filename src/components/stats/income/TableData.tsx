@@ -16,7 +16,6 @@ import { request } from "../../../common/request";
 
 type InitialValues = Omit<IncomeData, 'id' | 'created_at' | 'updated_at' | 'closing_date' | 'observations'>
 
-
 interface DataProps {
     data: IncomeData;
 }

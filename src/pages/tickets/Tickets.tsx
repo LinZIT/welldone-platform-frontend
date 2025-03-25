@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { Layout } from "../../components/ui/Layout"
 import { useUserStore } from "../../store/user/UserStore";
-import useEcho from "../../components/useEcho";
 import MenuItem from "@mui/material/MenuItem";
 import IconButton from "@mui/material/IconButton";
 import Box from "@mui/material/Box";
@@ -17,7 +16,7 @@ import { useOpenTicketStore } from "../../store/tickets/OpenTicketsStore";
 import { useSocketStore } from "../../store/sockets/SocketStore";
 
 const options = [
-    { text: 'Dashboard', icon: <DashboardRounded />, path: '/stats' },
+    { text: 'Dashboard', icon: <DashboardRounded />, path: '/dashboard' },
 ]
 
 export const Tickets = () => {

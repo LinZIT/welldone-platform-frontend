@@ -1,6 +1,6 @@
 import { useState, ReactElement } from "react";
 import { Drawer, Box, Toolbar, Grid, IconButton, Divider, useTheme } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import MenuRounded from "@mui/icons-material/MenuRounded";
 import CloseRounded from "@mui/icons-material/CloseRounded";
 

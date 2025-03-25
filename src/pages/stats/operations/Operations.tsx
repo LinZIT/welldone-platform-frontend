@@ -1,7 +1,7 @@
 import { Box } from "@mui/material";
-import { Layout } from "../../../components/ui"
-import { DescripcionDeVista } from "../../../components/ui/content"
-import { AlignItemsList } from "../../../components/ui/content/ListComponent"
+import { Layout } from "../../../components/ui/Layout";
+import { DescripcionDeVista } from "../../../components/ui/content/DescripcionDeVista";
+import { AlignItemsList } from "../../../components/ui/content/ListComponent";
 
 const items = [
   { avatar: 'OR', title: 'Operaciones Orlando', text: 'Estadisticas de Orlando', path: '/stats/operations/orlando', color: '#ff379b' },

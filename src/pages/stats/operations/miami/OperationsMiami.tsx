@@ -2,13 +2,13 @@ import BarChartRounded from "@mui/icons-material/BarChartRounded";
 import InsertChartRounded from "@mui/icons-material/InsertChartRounded";
 import PieChartRounded from "@mui/icons-material/PieChartRounded";
 import { TypographyCustom } from "../../../../components/custom";
-import { Layout } from "../../../../components/ui";
-import { DescripcionDeVista } from "../../../../components/ui/content";
-import { PageLoading } from "../../../../components/ui/content/PageLoading";
 import { OptionsList } from "../../../../components/ui/options";
-import { useGetGraphs } from "../../../../hooks";
 import { Option } from "../../../../interfaces";
 import { OperationsMiamiStatsTable } from "../../../../components/stats/operations/miami";
+import { useGetGraphs } from "../../../../hooks/useGetGraphs";
+import { Loading } from "../../../../components/ui/content/Loading";
+import { Layout } from "../../../../components/ui/Layout";
+import { DescripcionDeVista } from "../../../../components/ui/content/DescripcionDeVista";
 
 const options: Option[] = [
     { text: 'Agregar estadisticas', icon: <InsertChartRounded />, path: '/stats/operations/miami/add' },
@@ -19,7 +19,7 @@ const options: Option[] = [
 export const OperationsMiami = () => {
     const { data, setData, errors, loading } = useGetGraphs({ url: '/stats/operations/miami' });
     // Loader
-    if (loading) return (<PageLoading />);
+    if (loading) return (<Loading />);
 
     return (
         <Layout>

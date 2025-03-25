@@ -11,7 +11,6 @@ export * from './finance/Finance';
 export * from './finance/FinanceRegisterStats';
 export * from './income/Income';
 export * from './income/IncomeRegisterStats';
-export * from './marketing/Marketing';
 export * from './operations/Operations';
 export * from './disbursements/Disbursements';
 export * from './disbursements/DisbursementsRegisterStats';
